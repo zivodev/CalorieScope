@@ -33,7 +33,7 @@
     position: relative;
   }
 
-  /* 🌐 Language switch button */
+  /* 🌐 Small circular language button */
   #langBtn {
     position: absolute;
     top: 10px;
@@ -41,10 +41,20 @@
     background: #d3a15d;
     color: #111;
     border: none;
-    padding: 6px 12px;
-    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 32px;
+    text-align: center;
+    padding: 0;
+    transition: background 0.3s;
+  }
+
+  #langBtn:hover {
+    background: #e2b56f;
   }
 
   form {
@@ -94,7 +104,7 @@
 </head>
 <body>
   <div class="container" dir="ltr">
-    <button id="langBtn">عربي</button>
+    <button id="langBtn">ع</button>
 
     <form id="userForm">
       <input type="number" id="age" placeholder="Age" required />
@@ -151,7 +161,7 @@ const texts = {
     submit: "Get Calorie Goal",
     send: "Send Image",
     goalText: "Your daily goal:",
-    switch: "عربي"
+    switchIcon: "ع"
   },
   ar: {
     age: "العمر",
@@ -169,7 +179,7 @@ const texts = {
     submit: "احسب الهدف اليومي",
     send: "إرسال الصورة",
     goalText: "هدفك اليومي:",
-    switch: "English"
+    switchIcon: "A"
   }
 };
 
@@ -197,7 +207,7 @@ function updateLang() {
 
   document.querySelector('button[type="submit"]').textContent = t.submit;
   document.getElementById('sendImage').textContent = t.send;
-  document.getElementById('langBtn').textContent = t.switch;
+  document.getElementById('langBtn').textContent = t.switchIcon;
 
   if (goal > 0) {
     document.getElementById('goal').textContent = `${t.goalText} ${goal} kcal`;
@@ -211,7 +221,7 @@ document.getElementById("langBtn").addEventListener("click", () => {
 
 updateLang();
 
-/* --- Your existing logic --- */
+/* --- Calorie goal logic --- */
 document.getElementById('userForm').addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -270,6 +280,7 @@ document.getElementById('sendImage').addEventListener('click', async () => {
 </script>
 </body>
 </html>
+
 
 
 
