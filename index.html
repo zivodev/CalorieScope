@@ -1,108 +1,100 @@
-<head>
-  <title>
-    CalorieScope
-  </title>
-</head>
-
-
-
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-<title>CalorieScope</title>
-<style>
-  body {
-    margin: 0;
-    padding: 0;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    background: #111;
-    color: #fff;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 100vh;
-  }
-
-  .container {
-    width: 100%;
-    max-width: 400px;
-    padding: 20px;
-    box-sizing: border-box;
-    position: relative;
-  }
-
-  /* 🌐 Floating small circular language button */
-  #langBtn {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    background: #d3a15d;
-    color: #111;
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-weight: 700;
-    font-size: 16px;
-    line-height: 32px;
-    text-align: center;
-    padding: 0;
-    z-index: 1000;
-    transition: background 0.3s, transform 0.2s;
-  }
-
-  #langBtn:hover {
-    background: #e2b56f;
-    transform: scale(1.1);
-  }
-
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    margin-top: 40px;
-  }
-
-  input, select, button {
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
-    border-radius: 10px;
-    border: none;
-    box-sizing: border-box;
-  }
-
-  input, select {
-    background: #222;
-    color: #fff;
-  }
-
-  button[type="submit"], #sendImage {
-    background: #d3a15d;
-    color: #111;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  #goal, #progressContainer {
-    text-align: center;
-    margin-top: 20px;
-  }
-
-  progress {
-    width: 100%;
-    height: 18px;
-  }
-
-  @media (max-width: 480px) {
-    input, select, button {
-      font-size: 18px;
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>CalorieScope</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: #111;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
     }
-  }
-</style>
+
+    .container {
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    /* 🌐 Floating small circular language button */
+    #langBtn {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      background: #d3a15d;
+      color: #111;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 32px;
+      text-align: center;
+      padding: 0;
+      z-index: 1000;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    #langBtn:hover {
+      background: #e2b56f;
+      transform: scale(1.1);
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 40px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: none;
+      box-sizing: border-box;
+    }
+
+    input, select {
+      background: #222;
+      color: #fff;
+    }
+
+    button[type="submit"], #sendImage, #openImagePicker {
+      background: #d3a15d;
+      color: #111;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    #goal, #progressContainer {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    progress {
+      width: 100%;
+      height: 18px;
+    }
+
+    @media (max-width: 480px) {
+      input, select, button {
+        font-size: 18px;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="container" dir="ltr">
@@ -136,7 +128,16 @@
     <div id="progressContainer" style="display:none;">
       <progress id="calorieBar" value="0" max="100"></progress>
       <p id="progressText">0 / 0 kcal</p>
-      <input type="file" id="mealImage" accept="image/*" />
+
+      <!-- ✅ Updated Image Input -->
+      <input 
+        type="file" 
+        id="mealImage" 
+        accept="image/*" 
+        capture="environment" 
+        style="display:none;"
+      />
+      <button id="openImagePicker" type="button">📸 Upload or Take Photo</button>
       <button id="sendImage">Send Image</button>
     </div>
   </div>
@@ -258,6 +259,22 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
   }
 });
 
+/* --- Image picker logic --- */
+const openImagePicker = document.getElementById("openImagePicker");
+const mealImage = document.getElementById("mealImage");
+
+openImagePicker.addEventListener("click", () => {
+  const choice = confirm("📷 Do you want to open the camera?\nPress Cancel to open your photo library.");
+  if (choice) {
+    mealImage.removeAttribute("capture");
+    mealImage.setAttribute("capture", "environment");
+  } else {
+    mealImage.removeAttribute("capture");
+  }
+  mealImage.click();
+});
+
+/* --- Image upload logic --- */
 document.getElementById('sendImage').addEventListener('click', async () => {
   const file = document.getElementById('mealImage').files[0];
   if (!file) return alert('Upload an image first');
@@ -282,8 +299,3 @@ document.getElementById('sendImage').addEventListener('click', async () => {
 </script>
 </body>
 </html>
-
-
-
-
-
