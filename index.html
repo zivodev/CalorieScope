@@ -26,88 +26,129 @@
       position: relative;
     }
 
-    /* small circular language button */
-    #langBtn {
-      position: fixed;
-      top: 15px;
-      right: 15px;
-      background: #d3a15d;
-      color: #111;
-      border: none;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 16px;
-      line-height: 32px;
-      text-align: center;
-      padding: 0;
-      z-index: 1000;
-      transition: background 0.3s, transform 0.2s;
-    }
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>CalorieScope</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: #111;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+  }
 
-    #langBtn:hover {
-      background: #e2b56f;
-      transform: scale(1.1);
-    }
+  .container {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+    box-sizing: border-box;
+    position: relative;
+  }
 
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      margin-top: 40px;
-    }
+  /* 🌐 Floating language button */
+  #langBtn {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    background: #d3a15d;
+    color: #111;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 32px;
+    text-align: center;
+    padding: 0;
+    z-index: 1000;
+    transition: background 0.3s, transform 0.2s;
+  }
 
+  #langBtn:hover {
+    background: #e2b56f;
+    transform: scale(1.1);
+  }
+
+  /* 🌟 Loading bar */
+  #loadingBar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 4px;
+    width: 0%;
+    background: linear-gradient(90deg, #d3a15d, #f0c57a);
+    transition: width 0.3s ease;
+    z-index: 2000;
+  }
+
+  @keyframes loadingPulse {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+  }
+
+  #loadingBar.active {
+    width: 100%;
+    animation: loadingPulse 1s infinite;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 40px;
+  }
+
+  input, select, button {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: none;
+    box-sizing: border-box;
+  }
+
+  input, select {
+    background: #222;
+    color: #fff;
+  }
+
+  button[type="submit"], #sendImage {
+    background: #d3a15d;
+    color: #111;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  #goal, #progressContainer {
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  progress {
+    width: 100%;
+    height: 18px;
+  }
+
+  @media (max-width: 480px) {
     input, select, button {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      border-radius: 10px;
-      border: none;
-      box-sizing: border-box;
+      font-size: 18px;
     }
-
-    input, select {
-      background: #222;
-      color: #fff;
-    }
-
-    /* Buttons */
-    button[type="submit"], #sendImage, #openImagePicker {
-      background: #d3a15d;
-      color: #111;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.3s, transform 0.2s;
-    }
-
-    /* Hover effect */
-    button[type="submit"]:hover,
-    #sendImage:hover,
-    #openImagePicker:hover {
-      background: #e2b56f;
-      transform: scale(1.05);
-    }
-
-    #goal, #progressContainer {
-      text-align: center;
-      margin-top: 20px;
-    }
-
-    progress {
-      width: 100%;
-      height: 18px;
-    }
-
-    @media (max-width: 480px) {
-      input, select, button {
-        font-size: 18px;
-      }
-    }
-  </style>
+  }
+</style>
 </head>
 <body>
+  <div id="loadingBar"></div>
   <div class="container" dir="ltr">
     <button id="langBtn">ع</button>
 
@@ -139,16 +180,7 @@
     <div id="progressContainer" style="display:none;">
       <progress id="calorieBar" value="0" max="100"></progress>
       <p id="progressText">0 / 0 kcal</p>
-
-      <!-- Image Input -->
-      <input 
-        type="file" 
-        id="mealImage" 
-        accept="image/*" 
-        capture="environment" 
-        style="display:none;"
-      />
-      <button id="openImagePicker" type="button">📸 Upload or Take Photo</button>
+      <input type="file" id="mealImage" accept="image/*" />
       <button id="sendImage">Send Image</button>
     </div>
   </div>
@@ -228,6 +260,12 @@ function updateLang() {
   }
 }
 
+function showLoading(show) {
+  const bar = document.getElementById('loadingBar');
+  if (show) bar.classList.add('active');
+  else bar.classList.remove('active');
+}
+
 document.getElementById("langBtn").addEventListener("click", () => {
   lang = lang === "en" ? "ar" : "en";
   updateLang();
@@ -238,6 +276,7 @@ updateLang();
 /* --- Calorie goal logic --- */
 document.getElementById('userForm').addEventListener('submit', async (e) => {
   e.preventDefault();
+  showLoading(true);
 
   const data = {
     age: document.getElementById('age').value,
@@ -267,25 +306,11 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
   } catch (err) {
     console.error("Fetch error:", err);
     alert('Error fetching goal.');
+  } finally {
+    showLoading(false);
   }
 });
 
-/* --- Image picker logic --- */
-const openImagePicker = document.getElementById("openImagePicker");
-const mealImage = document.getElementById("mealImage");
-
-openImagePicker.addEventListener("click", () => {
-  const choice = confirm("📷 Do you want to open the camera?\nPress Cancel to open your photo library.");
-  if (choice) {
-    mealImage.removeAttribute("capture");
-    mealImage.setAttribute("capture", "environment");
-  } else {
-    mealImage.removeAttribute("capture");
-  }
-  mealImage.click();
-});
-
-/* --- Image upload logic --- */
 document.getElementById('sendImage').addEventListener('click', async () => {
   const file = document.getElementById('mealImage').files[0];
   if (!file) return alert('Upload an image first');
@@ -295,18 +320,28 @@ document.getElementById('sendImage').addEventListener('click', async () => {
   formData.append('goal', goal);
   formData.append('current', current);
 
-  const res = await fetch('https://YOUR-N8N-URL/webhook/meal-image', {
-    method: 'POST',
-    body: formData
-  });
+  showLoading(true);
+  try {
+    const res = await fetch('https://YOUR-N8N-URL/webhook/meal-image', {
+      method: 'POST',
+      body: formData
+    });
 
-  const result = await res.json();
-  const calories = Number(result.mealCalories) || 0;
-  current += calories;
+    const result = await res.json();
+    const calories = Number(result.mealCalories) || 0;
+    current += calories;
 
-  document.getElementById('calorieBar').value = current;
-  document.getElementById('progressText').textContent = `${current} / ${goal} kcal`;
+    document.getElementById('calorieBar').value = current;
+    document.getElementById('progressText').textContent = `${current} / ${goal} kcal`;
+  } catch (err) {
+    alert('Error uploading image.');
+  } finally {
+    showLoading(false);
+  }
 });
 </script>
+</body>
+</html>
+
 </body>
 </html>
