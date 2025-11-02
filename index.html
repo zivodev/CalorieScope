@@ -36,25 +36,43 @@ let current = 0;
 
 document.getElementById('userForm').addEventListener('submit', async (e) => {
   e.preventDefault();
+
   const data = {
     age: document.getElementById('age').value,
     weight: document.getElementById('weight').value,
-    height: document.getElementById('height').value,
-    gender: document.getElementById('gender').value,     // ✅ Added
-    activity: document.getElementById('activity').value  // ✅ Added
+    height: document.getElementById('height').value
   };
 
-  const res = await fetch('https://zivodev.app.n8n.cloud/webhook-test/bcddd092-eaa8-4a52-9e24-a1a7e5b26dd6', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
+  try {
+    const res = await fetch('https://zivodev.app.n8n.cloud/webhook-test/bcddd092-eaa8-4a52-9e24-a1a7e5b26dd6', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
 
-  const result = await res.json();
-  goal = result.dailyGoal;
-  document.getElementById('goal').textContent = `Your daily goal: ${goal} kcal`;
-  document.getElementById('progressContainer').style.display = 'block';
-  document.getElementById('calorieBar').max = goal;
+    const text = await res.text();
+    console.log("Raw response:", text);
+
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch {
+      console.error("JSON parse error");
+      result = {};
+    }
+
+    // ✅ Make sure we actually got a number
+    goal = Number(result.dailyGoal) || 0;
+    console.log("Goal value:", goal);
+
+    document.getElementById('goal').textContent = `Your daily goal: ${goal} kcal`;
+    document.getElementById('progressContainer').style.display = 'block';
+    document.getElementById('calorieBar').max = goal;
+    document.getElementById('progressText').textContent = `${current} / ${goal} kcal`;
+
+  } catch (err) {
+    console.error("Fetch error:", err);
+  }
 });
 
 document.getElementById('sendImage').addEventListener('click', async () => {
@@ -72,7 +90,7 @@ document.getElementById('sendImage').addEventListener('click', async () => {
   });
 
   const result = await res.json();
-  const calories = result.mealCalories;
+  const calories = Number(result.mealCalories) || 0;
   current += calories;
 
   document.getElementById('calorieBar').value = current;
