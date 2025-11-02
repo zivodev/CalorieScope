@@ -12,34 +12,47 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-<title>CalorieScope Form — Mobile Friendly</title>
+<title>CalorieScope</title>
 <style>
-  /* ✅ Full-viewport layout */
-  html, body {
+  body {
     margin: 0;
     padding: 0;
-    width: 100%;
-    height: 100%;
-    background: #111; /* matches your app color */
-    color: #fff;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: #111;
+    color: #fff;
     display: flex;
     justify-content: center;
     align-items: flex-start;
+    min-height: 100vh;
   }
 
-  .form-wrap {
+  .container {
     width: 100%;
     max-width: 400px;
     padding: 20px;
     box-sizing: border-box;
+    position: relative;
   }
 
-  form#userForm {
+  /* 🌐 Language switch button */
+  #langBtn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #d3a15d;
+    color: #111;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  form {
     display: flex;
     flex-direction: column;
     gap: 14px;
-    width: 100%;
+    margin-top: 40px;
   }
 
   input, select, button {
@@ -56,7 +69,7 @@
     color: #fff;
   }
 
-  button {
+  button[type="submit"], #sendImage {
     background: #d3a15d;
     color: #111;
     font-weight: 600;
@@ -74,13 +87,6 @@
   }
 
   @media (max-width: 480px) {
-    html, body {
-      align-items: center;
-    }
-    .form-wrap {
-      padding: 14px;
-      max-width: 100%;
-    }
     input, select, button {
       font-size: 18px;
     }
@@ -88,8 +94,10 @@
 </style>
 </head>
 <body>
-  <div class="form-wrap">
-    <form id="userForm" novalidate>
+  <div class="container" dir="ltr">
+    <button id="langBtn">عربي</button>
+
+    <form id="userForm">
       <input type="number" id="age" placeholder="Age" required />
       <input type="number" id="weight" placeholder="Weight (kg)" required />
       <input type="number" id="height" placeholder="Height (cm)" required />
@@ -125,7 +133,86 @@
 <script>
 let goal = 0;
 let current = 0;
+let lang = "en";
 
+const texts = {
+  en: {
+    age: "Age",
+    weight: "Weight (kg)",
+    height: "Height (cm)",
+    gender: "Select Gender",
+    male: "Male",
+    female: "Female",
+    activity: "Activity Level",
+    sedentary: "Sedentary (little or no exercise)",
+    light: "Lightly Active (1–3 days/week)",
+    moderate: "Moderately Active (3–5 days/week)",
+    active: "Active (6–7 days/week)",
+    very_active: "Very Active (hard daily exercise)",
+    submit: "Get Calorie Goal",
+    send: "Send Image",
+    goalText: "Your daily goal:",
+    switch: "عربي"
+  },
+  ar: {
+    age: "العمر",
+    weight: "الوزن (كجم)",
+    height: "الطول (سم)",
+    gender: "اختر الجنس",
+    male: "ذكر",
+    female: "أنثى",
+    activity: "مستوى النشاط",
+    sedentary: "خامل (قليل أو بدون تمرين)",
+    light: "نشاط خفيف (1–3 أيام/أسبوع)",
+    moderate: "نشاط معتدل (3–5 أيام/أسبوع)",
+    active: "نشاط مرتفع (6–7 أيام/أسبوع)",
+    very_active: "نشاط عالي جداً (تمارين قوية يومياً)",
+    submit: "احسب الهدف اليومي",
+    send: "إرسال الصورة",
+    goalText: "هدفك اليومي:",
+    switch: "English"
+  }
+};
+
+function updateLang() {
+  const t = texts[lang];
+  document.querySelector("html").lang = lang;
+  document.querySelector(".container").dir = lang === "ar" ? "rtl" : "ltr";
+
+  document.getElementById("age").placeholder = t.age;
+  document.getElementById("weight").placeholder = t.weight;
+  document.getElementById("height").placeholder = t.height;
+
+  const gender = document.getElementById("gender");
+  gender.options[0].text = t.gender;
+  gender.options[1].text = t.male;
+  gender.options[2].text = t.female;
+
+  const activity = document.getElementById("activity");
+  activity.options[0].text = t.activity;
+  activity.options[1].text = t.sedentary;
+  activity.options[2].text = t.light;
+  activity.options[3].text = t.moderate;
+  activity.options[4].text = t.active;
+  activity.options[5].text = t.very_active;
+
+  document.querySelector('button[type="submit"]').textContent = t.submit;
+  document.getElementById('sendImage').textContent = t.send;
+  document.getElementById('langBtn').textContent = t.switch;
+
+  if (goal > 0) {
+    document.getElementById('goal').textContent = `${t.goalText} ${goal} kcal`;
+  }
+}
+
+document.getElementById("langBtn").addEventListener("click", () => {
+  lang = lang === "en" ? "ar" : "en";
+  updateLang();
+});
+
+updateLang();
+
+/* --- Your existing logic --- */
 document.getElementById('userForm').addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -149,7 +236,7 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
     try { result = JSON.parse(text); } catch { result = {}; }
 
     goal = Number(result.dailyGoal) || 0;
-    document.getElementById('goal').textContent = `Your daily goal: ${goal} kcal`;
+    document.getElementById('goal').textContent = `${texts[lang].goalText} ${goal} kcal`;
     document.getElementById('progressContainer').style.display = 'block';
     document.getElementById('calorieBar').max = Math.max(goal, 1);
     document.getElementById('progressText').textContent = `${current} / ${goal} kcal`;
