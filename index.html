@@ -240,11 +240,14 @@
     font-weight: 600;
     cursor: pointer;
     transition: 0.2s;
+    position: relative;
+    z-index: 10;
   }
 
   button:hover {
     background: var(--accent-hover, #e2b56f);
     transform: scale(1.05);
+    z-index: 20;
   }
 
   #goalDisplay, #progressContainer {
@@ -443,12 +446,12 @@
 
   .macroProgress p { margin: 6px 0; font-size: 14px; color: #ddd; }
   /* Collapsible user panel */
-  .panel { margin-top: 20px; border: 2px solid #333; border-radius: 12px; overflow: hidden; background: #181818; }
-  .panelHeader { width: 100%; background: #222; color: var(--text); border: none; padding: 12px 14px; text-align: left; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 700; cursor: pointer; }
+  .panel { margin-top: 20px; border: 2px solid #333; border-radius: 12px; overflow: hidden; background: #181818; position: relative; }
+  .panelHeader { width: 100%; background: #222; color: var(--text); border: none; padding: 12px 14px; text-align: left; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 700; cursor: pointer; position: relative; z-index: 1; }
   .panelHeader .arrow { transition: transform 0.25s ease; }
   .panelHeader[aria-expanded="true"] .arrow { transform: rotate(180deg); }
-  .panelBody { overflow: hidden; max-height: 1000px; transition: max-height 0.35s ease; }
-  .panelBody.minimized { max-height: 0; }
+  .panelBody { overflow: hidden; max-height: 1000px; transition: max-height 0.35s ease; padding: 0 14px 18px; position: relative; }
+  .panelBody.minimized { max-height: 0; padding: 0 14px; }
 
   /* Loading overlay */
   #loadingOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; z-index: 3000; }
