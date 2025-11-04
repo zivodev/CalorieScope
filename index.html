@@ -390,6 +390,43 @@
   }
 
   .macroProgress p { margin: 6px 0; font-size: 14px; color: #ddd; }
+  /* Circular calorie progress */
+  .circleWrap {
+    width: 200px;
+    height: 200px;
+    margin: 20px auto 10px;
+    position: relative;
+  }
+  .circleWrap svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+  .circleBg { stroke: #2a2a2a; }
+  .circleFg { stroke: #d3a15d; transition: stroke-dashoffset 0.6s ease; }
+  .circleCenter {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .circleValue { font-size: 22px; font-weight: 800; }
+  .circleLabel { font-size: 12px; color: #bbb; }
+
+  /* Macro mini bars */
+  .macroProgress { margin-top: 12px; }
+  .macroBlock { margin: 10px 0 14px; }
+  .macroTitle { margin: 0 0 6px; font-size: 14px; color: #ddd; }
+  .miniBar {
+    width: 100%;
+    height: 8px;
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .miniFill { height: 100%; width: 0%; background: #5dd39e; transition: width 0.5s ease; }
+  .miniFill.carbs { background: #4fc3f7; }
+  .miniFill.fat { background: #ce93d8; }
 </style>
 </head>
 <body>
@@ -438,13 +475,30 @@
     <div id="goalDisplay"></div>
 
     <div id="progressContainer" style="display:none;">
-      <progress id="calorieBar" value="0" max="100"></progress>
-      <p id="progressText">0 / 0 kcal</p>
+      <div class="circleWrap" aria-label="Calories progress">
+        <svg viewBox="0 0 160 160" role="img" aria-hidden="true">
+          <circle class="circleBg" cx="80" cy="80" r="70" stroke-width="14" fill="none"></circle>
+          <circle id="calorieProgress" class="circleFg" cx="80" cy="80" r="70" stroke-width="14" fill="none" stroke-linecap="round" stroke-dasharray="439.82" stroke-dashoffset="439.82"></circle>
+        </svg>
+        <div class="circleCenter">
+          <div id="progressText" class="circleValue">0 / 0 kcal</div>
+          <div class="circleLabel">Calorie goal</div>
+        </div>
+      </div>
 
       <div class="macroProgress">
-        <p id="proteinText">Protein: 0g / 0g</p>
-        <p id="carbsText">Carbs: 0g / 0g</p>
-        <p id="fatText">Fats: 0g / 0g</p>
+        <div class="macroBlock">
+          <p id="proteinText" class="macroTitle">Protein: 0g / 0g</p>
+          <div class="miniBar"><div id="proteinBar" class="miniFill"></div></div>
+        </div>
+        <div class="macroBlock">
+          <p id="carbsText" class="macroTitle">Carbs: 0g / 0g</p>
+          <div class="miniBar"><div id="carbsBar" class="miniFill carbs"></div></div>
+        </div>
+        <div class="macroBlock">
+          <p id="fatText" class="macroTitle">Fats: 0g / 0g</p>
+          <div class="miniBar"><div id="fatBar" class="miniFill fat"></div></div>
+        </div>
       </div>
 
       <div class="actionsColumn">
@@ -480,6 +534,9 @@ let lang = "en";
 let proteinGoalTarget = 0;
 let carbGoalTarget = 0;
 let fatGoalTarget = 0;
+let proteinCurrent = 0;
+let carbCurrent = 0;
+let fatCurrent = 0;
 
 const texts = {
   en: {
@@ -604,9 +661,9 @@ function updateLang() {
   const carbsEl = document.getElementById('carbsText');
   const fatEl = document.getElementById('fatText');
   if (proteinEl && carbsEl && fatEl) {
-    proteinEl.textContent = `${t.proteinLabel}: 0g / ${proteinGoalTarget}g`;
-    carbsEl.textContent = `${t.carbsLabel}: 0g / ${carbGoalTarget}g`;
-    fatEl.textContent = `${t.fatsLabel}: 0g / ${fatGoalTarget}g`;
+    proteinEl.textContent = `${t.proteinLabel}: ${proteinCurrent}g / ${proteinGoalTarget}g`;
+    carbsEl.textContent = `${t.carbsLabel}: ${carbCurrent}g / ${carbGoalTarget}g`;
+    fatEl.textContent = `${t.fatsLabel}: ${fatCurrent}g / ${fatGoalTarget}g`;
   }
 }
 
@@ -633,6 +690,12 @@ function saveState() {
   try {
     localStorage.setItem('cs_goal', String(goal));
     localStorage.setItem('cs_current', String(current));
+    localStorage.setItem('cs_p_curr', String(proteinCurrent));
+    localStorage.setItem('cs_c_curr', String(carbCurrent));
+    localStorage.setItem('cs_f_curr', String(fatCurrent));
+    localStorage.setItem('cs_p_goal', String(proteinGoalTarget));
+    localStorage.setItem('cs_c_goal', String(carbGoalTarget));
+    localStorage.setItem('cs_f_goal', String(fatGoalTarget));
   } catch {}
 }
 
@@ -640,20 +703,58 @@ function loadState() {
   try {
     const g = Number(localStorage.getItem('cs_goal') || '0');
     const c = Number(localStorage.getItem('cs_current') || '0');
+    proteinCurrent = Number(localStorage.getItem('cs_p_curr') || '0');
+    carbCurrent = Number(localStorage.getItem('cs_c_curr') || '0');
+    fatCurrent = Number(localStorage.getItem('cs_f_curr') || '0');
+    proteinGoalTarget = Number(localStorage.getItem('cs_p_goal') || '0');
+    carbGoalTarget = Number(localStorage.getItem('cs_c_goal') || '0');
+    fatGoalTarget = Number(localStorage.getItem('cs_f_goal') || '0');
     if (g > 0) {
       goal = g;
       current = Math.min(c, g);
       document.getElementById('goalDisplay').textContent = `${texts[lang].goalText} ${goal} kcal`;
       const pc = document.getElementById('progressContainer');
       pc.style.display = 'block';
-      const bar = document.getElementById('calorieBar');
-      bar.max = Math.max(goal, 1);
-      bar.value = current;
-      document.getElementById('progressText').textContent = `${current} / ${goal} kcal`;
+      updateCalorieCircle();
+      updateMacroBars();
     }
   } catch {}
 }
 loadState();
+
+function updateCalorieCircle() {
+  const circle = document.getElementById('calorieProgress');
+  const label = document.getElementById('progressText');
+  const r = 70; // must match SVG r
+  const circumference = 2 * Math.PI * r;
+  const safeGoal = Math.max(goal, 1);
+  const pct = Math.max(0, Math.min(1, current / safeGoal));
+  const offset = circumference * (1 - pct);
+  if (circle) {
+    circle.setAttribute('stroke-dasharray', String(circumference));
+    circle.setAttribute('stroke-dashoffset', String(offset));
+  }
+  if (label) label.textContent = `${current} / ${goal} kcal`;
+}
+
+function updateMacroBars() {
+  const t = texts[lang];
+  const pPct = proteinGoalTarget > 0 ? Math.min(100, Math.round((proteinCurrent / proteinGoalTarget) * 100)) : 0;
+  const cPct = carbGoalTarget > 0 ? Math.min(100, Math.round((carbCurrent / carbGoalTarget) * 100)) : 0;
+  const fPct = fatGoalTarget > 0 ? Math.min(100, Math.round((fatCurrent / fatGoalTarget) * 100)) : 0;
+  const pBar = document.getElementById('proteinBar');
+  const cBar = document.getElementById('carbsBar');
+  const fBar = document.getElementById('fatBar');
+  if (pBar) pBar.style.width = pPct + '%';
+  if (cBar) cBar.style.width = cPct + '%';
+  if (fBar) fBar.style.width = fPct + '%';
+  const proteinEl = document.getElementById('proteinText');
+  const carbsEl = document.getElementById('carbsText');
+  const fatEl = document.getElementById('fatText');
+  if (proteinEl) proteinEl.textContent = `${t.proteinLabel}: ${proteinCurrent}g / ${proteinGoalTarget}g`;
+  if (carbsEl) carbsEl.textContent = `${t.carbsLabel}: ${carbCurrent}g / ${carbGoalTarget}g`;
+  if (fatEl) fatEl.textContent = `${t.fatsLabel}: ${fatCurrent}g / ${fatGoalTarget}g`;
+}
 
 /* --- Calorie goal logic --- */
 document.getElementById('userForm').addEventListener('submit', async (e) => {
@@ -684,19 +785,17 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
     current = 0;
     document.getElementById('goalDisplay').textContent = `${texts[lang].goalText} ${goal} kcal`;
     document.getElementById('progressContainer').style.display = 'block';
-    document.getElementById('calorieBar').max = Math.max(goal, 1);
-    document.getElementById('calorieBar').value = current;
-    document.getElementById('progressText').textContent = `${current} / ${goal} kcal`;
+    updateCalorieCircle();
     saveState();
 
     // update macro targets if provided by n8n
     proteinGoalTarget = Number(result.proteinGoal) || 0;
     carbGoalTarget = Number(result.carbGoal) || 0;
     fatGoalTarget = Number(result.fatGoal) || 0;
-
-    document.getElementById('proteinText').textContent = `${texts[lang].proteinLabel}: 0g / ${proteinGoalTarget}g`;
-    document.getElementById('carbsText').textContent = `${texts[lang].carbsLabel}: 0g / ${carbGoalTarget}g`;
-    document.getElementById('fatText').textContent = `${texts[lang].fatsLabel}: 0g / ${fatGoalTarget}g`;
+    proteinCurrent = 0;
+    carbCurrent = 0;
+    fatCurrent = 0;
+    updateMacroBars();
 
   } catch (err) {
     console.error("Fetch error:", err);
@@ -714,9 +813,7 @@ document.getElementById('addCaloriesBtn').addEventListener('click', () => {
 
   current += amount;
   if (current > goal) current = goal;
-
-  document.getElementById('calorieBar').value = current;
-  document.getElementById('progressText').textContent = `${current} / ${goal} kcal`;
+  updateCalorieCircle();
   input.value = "";
   saveState();
 });
@@ -755,13 +852,24 @@ document.getElementById('sendImage').addEventListener('click', async () => {
     }
     current += added;
     if (current > goal) current = goal;
-
-    document.getElementById('calorieBar').value = current;
-    document.getElementById('progressText').textContent = `${current} / ${goal} kcal`;
+    updateCalorieCircle();
     if (added > 0) {
       const msg = lang === 'en' ? `+${added} kcal added` : `+${added} سعر حراري`;
       try { console.info(msg); } catch {}
     }
+
+    // Parse macros if available in webhook response
+    const pKeys = ['protein', 'protein_g', 'proteinGrams', 'proteinAdded'];
+    const cKeys = ['carbs', 'carbohydrates', 'carbs_g', 'carbGrams', 'carbsAdded'];
+    const fKeys = ['fat', 'fats', 'fat_g', 'fatGrams', 'fatAdded'];
+    for (const k of pKeys) { if (result && result[k] != null && result[k] !== '') { const n = Number(result[k]); if (Number.isFinite(n)) { proteinCurrent += n; break; } } }
+    for (const k of cKeys) { if (result && result[k] != null && result[k] !== '') { const n = Number(result[k]); if (Number.isFinite(n)) { carbCurrent += n; break; } } }
+    for (const k of fKeys) { if (result && result[k] != null && result[k] !== '') { const n = Number(result[k]); if (Number.isFinite(n)) { fatCurrent += n; break; } } }
+    // Clamp to goals if goals exist
+    if (proteinGoalTarget > 0) proteinCurrent = Math.min(proteinCurrent, proteinGoalTarget);
+    if (carbGoalTarget > 0) carbCurrent = Math.min(carbCurrent, carbGoalTarget);
+    if (fatGoalTarget > 0) fatCurrent = Math.min(fatCurrent, fatGoalTarget);
+    updateMacroBars();
 
     const status = document.getElementById('uploadStatus');
     if (status) { status.textContent = texts[lang].uploadSuccess; status.className = 'uploadStatus success'; }
@@ -812,16 +920,22 @@ if (forgetBtn) {
     try {
       localStorage.removeItem('cs_goal');
       localStorage.removeItem('cs_current');
+      localStorage.removeItem('cs_p_curr');
+      localStorage.removeItem('cs_c_curr');
+      localStorage.removeItem('cs_f_curr');
+      localStorage.removeItem('cs_p_goal');
+      localStorage.removeItem('cs_c_goal');
+      localStorage.removeItem('cs_f_goal');
     } catch {}
     goal = 0;
     current = 0;
+    proteinCurrent = 0; carbCurrent = 0; fatCurrent = 0;
+    proteinGoalTarget = 0; carbGoalTarget = 0; fatGoalTarget = 0;
     const pc = document.getElementById('progressContainer');
     pc.style.display = 'none';
     document.getElementById('goalDisplay').textContent = '';
-    const bar = document.getElementById('calorieBar');
-    bar.value = 0;
-    bar.max = 1;
-    document.getElementById('progressText').textContent = `0 / 0 kcal`;
+    updateCalorieCircle();
+    updateMacroBars();
   });
 }
 </script>
