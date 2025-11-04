@@ -321,18 +321,8 @@
     font-size: 20px;
   }
 
-  /* Upload input */
-  #mealImage {
-    display: inline-block;
-    width: var(--control-width);
-    height: var(--control-height);
-    padding: 6px;
-    background: #222;
-    color: #fff;
-    border-radius: 10px;
-    border: 2px solid #333;
-    box-sizing: border-box;
-  }
+  /* Upload input (hidden; use custom button) */
+  #mealImage { display: none; }
   #uploadBtn {
     background: #222;
     color: #fff;
@@ -708,8 +698,13 @@ document.getElementById('sendImage').addEventListener('click', async () => {
       method: 'POST',
       body: formData
     });
-
-    const result = await res.json();
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      throw new Error(`HTTP ${res.status} ${res.statusText} ${errText ? '- ' + errText : ''}`);
+    }
+    const text = await res.text();
+    let result;
+    try { result = JSON.parse(text); } catch { result = {}; }
     const calories = Number(result.mealCalories) || 0;
     current += calories;
     if (current > goal) current = goal;
@@ -721,7 +716,8 @@ document.getElementById('sendImage').addEventListener('click', async () => {
     if (status) { status.textContent = texts[lang].uploadSuccess; status.className = 'uploadStatus success'; }
     saveState();
   } catch (err) {
-    alert('Error uploading image.');
+    console.error('Upload error:', err);
+    alert((lang === 'en' ? 'Error uploading image: ' : 'خطأ في رفع الصورة: ') + (err && err.message ? err.message : ''));
   } finally {
     showLoading(false);
   }
