@@ -6,6 +6,57 @@
 <title>CalorieScope</title>
 <link rel="icon" type="image/png" href="logo.png">
 <style>
+  /* THEME SELECTOR */
+
+
+  .theme-selector { 
+    position: fixed;
+    top: 58px;
+    right: 10px;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    z-index: 1000;
+    background: rgba(20, 20, 20, 0.4);
+    backdrop-filter: blur(8px);
+    padding: 6px 10px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+
+
+
+
+  .theme-circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, box-shadow 0.3s;
+    font-size: 12px;
+    color: white;
+  }
+
+  .theme-circle:hover {
+    transform: scale(1.3);
+    box-shadow: 0 0 8px var(--accent);
+  }
+  
+  .theme-circle.active {
+    box-shadow: 0 0 10px 2px var(--accent);
+  }
+
+  .theme-circle[data-theme="default"] { background: linear-gradient(135deg, #d3a15d, #e2b56f); }
+  .theme-circle[data-theme="sunset"] { background: linear-gradient(135deg, #ff7f50, #ffa07a); }
+  .theme-circle[data-theme="ocean"] { background: linear-gradient(135deg, #4fc3f7, #01579b); }
+  .theme-circle[data-theme="forest"] { background: linear-gradient(135deg, #388e3c, #1b5e20); }
+  .theme-circle[data-theme="neon"] { background: linear-gradient(135deg, #00e5ff, #1de9b6); }
+  .theme-circle[data-theme="lavender"] { background: linear-gradient(135deg, #ba68c8, #7b1fa2); }
   [data-theme="sunset"] {
     --bg: #1b0b17;
     --text: #ffe8d6;
