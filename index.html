@@ -444,10 +444,34 @@
     line-height: 1;
   }
 
+  /* Image info input */
+  #imageInfoContainer {
+    display: none;
+    margin-top: 12px;
+    width: 100%;
+  }
+
+  #imageInfo {
+    width: 100%;
+    padding: 10px;
+    font-size: 15px;
+    border-radius: 10px;
+    background: #222;
+    color: #fff;
+    border: 2px solid #333;
+    box-sizing: border-box;
+  }
+
+  #imageInfo:focus {
+    outline: none;
+    border-color: var(--accent, #d3a15d);
+  }
+
   .macroProgress p { margin: 6px 0; font-size: 14px; color: #ddd; }
   /* Collapsible user panel */
   .panel { margin-top: 20px; border: 2px solid #333; border-radius: 12px; overflow: hidden; background: #181818; position: relative; }
-  .panelHeader { width: 100%; background: #222; color: var(--text); border: none; padding: 12px 14px; text-align: left; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 700; cursor: pointer; position: relative; z-index: 1; }
+  .panelHeader { width: 100%; background: #222; color: var(--text); border: none; padding: 12px 14px; text-align: left; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 700; cursor: pointer; position: relative; z-index: 10; transition: background 0.2s; }
+  .panelHeader:hover { background: #2a2a2a; z-index: 20; }
   .panelHeader .arrow { transition: transform 0.25s ease; }
   .panelHeader[aria-expanded="true"] .arrow { transform: rotate(180deg); }
   .panelBody { overflow: hidden; max-height: 1000px; transition: max-height 0.35s ease; padding: 0 14px 18px; position: relative; }
@@ -525,7 +549,7 @@
     </div>
 
     <div id="userPanel" class="panel">
-      <button id="panelToggle" class="panelHeader" aria-expanded="true"><span id="panelTitle">Your stats</span><span class="arrow">⌃</span></button>
+      <button id="panelToggle" class="panelHeader" aria-expanded="true"><span id="panelTitle">Body Details</span><span class="arrow">⌃</span></button>
       <div id="panelBody" class="panelBody">
       <form id="userForm">
       <input type="number" id="age" placeholder="Age" required />
@@ -606,7 +630,10 @@
           <button id="sendImage" class="circleBtn" type="button" aria-label="Send">➤</button>
         </div>
 
-        
+        <!-- Image info input (shown when image is selected) -->
+        <div id="imageInfoContainer">
+          <input type="text" id="imageInfo" placeholder="Add info about this meal (optional)" />
+        </div>
 
         <!-- Manual calorie input (bottom) -->
         <div class="manualAdd">
@@ -654,6 +681,7 @@ const texts = {
     uploadNone: "No photo selected",
     uploadSelected: "Image selected",
     uploadSuccess: "Uploaded!",
+    imageInfoPlaceholder: "Add info about this meal (optional)",
     proteinLabel: "Protein",
     carbsLabel: "Carbs",
     fatsLabel: "Fats",
@@ -662,8 +690,9 @@ const texts = {
     goalLose: "Lose weight",
     goalGain: "Gain weight",
     goalMuscle: "Muscle gain",
-    goalCut: "Fat loss (cut)"
-    ,forgetGoalTitle: "Change information"
+    goalCut: "Fat loss (cut)",
+    forgetGoalTitle: "Change information",
+    panelTitle: "Body Details"
   },
   ar: {
     age: "العمر",
@@ -687,6 +716,7 @@ const texts = {
     uploadNone: "لم يتم اختيار صورة",
     uploadSelected: "تم اختيار الصورة",
     uploadSuccess: "تم الرفع!",
+    imageInfoPlaceholder: "أضف معلومات عن هذه الوجبة (اختياري)",
     proteinLabel: "البروتين",
     carbsLabel: "الكربوهيدرات",
     fatsLabel: "الدهون",
@@ -695,8 +725,9 @@ const texts = {
     goalLose: "خسارة الوزن",
     goalGain: "زيادة الوزن",
     goalMuscle: "زيادة العضلات",
-    goalCut: "خفض الدهون (تنشيف)"
-    ,forgetGoalTitle: "تعديل المعلومات"
+    goalCut: "خفض الدهون (تنشيف)",
+    forgetGoalTitle: "تعديل المعلومات",
+    panelTitle: "تفاصيل الجسم"
   }
 };
 
@@ -742,10 +773,12 @@ function updateLang() {
   if (uploadBtnEl) uploadBtnEl.textContent = `⬆ ${t.addPhoto}`;
   const uploadStatus = document.getElementById('uploadStatus');
   if (uploadStatus) { uploadStatus.textContent = t.uploadNone; uploadStatus.className = 'uploadStatus'; }
+  const imageInfo = document.getElementById('imageInfo');
+  if (imageInfo) imageInfo.placeholder = t.imageInfoPlaceholder;
   const forgetBtn = document.getElementById('forgetGoalBtn');
   if (forgetBtn) forgetBtn.title = t.forgetGoalTitle;
   const panelTitle = document.getElementById('panelTitle');
-  if (panelTitle) panelTitle.textContent = lang === 'ar' ? 'إحصاءاتك' : 'Your stats';
+  if (panelTitle) panelTitle.textContent = t.panelTitle;
 
   if (goal > 0) {
     document.getElementById('goalDisplay').textContent = `${t.goalText} ${goal} kcal`;
@@ -961,6 +994,10 @@ document.getElementById('sendImage').addEventListener('click', async () => {
   formData.append('image', file);
   formData.append('goal', goal);
   formData.append('current', current);
+  const imageInfo = document.getElementById('imageInfo').value.trim();
+  if (imageInfo) {
+    formData.append('info', imageInfo);
+  }
 
   showLoading(true);
   try {
@@ -1007,6 +1044,15 @@ document.getElementById('sendImage').addEventListener('click', async () => {
 
     const status = document.getElementById('uploadStatus');
     if (status) { status.textContent = texts[lang].uploadSuccess; status.className = 'uploadStatus success'; }
+    // Clear image and info after successful upload
+    const mealImageInput = document.getElementById('mealImage');
+    const infoInput = document.getElementById('imageInfo');
+    const infoContainer = document.getElementById('imageInfoContainer');
+    const preview = document.getElementById('imagePreview');
+    if (mealImageInput) mealImageInput.value = '';
+    if (infoInput) infoInput.value = '';
+    if (infoContainer) infoContainer.style.display = 'none';
+    if (preview) { preview.src = ''; preview.style.display = 'none'; }
     saveState();
   } catch (err) {
     console.error('Upload error:', err);
@@ -1032,9 +1078,13 @@ if (mealInput) {
     const file = mealInput.files && mealInput.files[0];
     const status = document.getElementById('uploadStatus');
     const preview = document.getElementById('imagePreview');
+    const infoContainer = document.getElementById('imageInfoContainer');
+    const infoInput = document.getElementById('imageInfo');
     if (!file) {
       if (status) { status.textContent = texts[lang].uploadNone; status.className = 'uploadStatus'; }
       if (preview) { preview.src = ''; preview.style.display = 'none'; }
+      if (infoContainer) infoContainer.style.display = 'none';
+      if (infoInput) infoInput.value = '';
       return;
     }
     if (status) { status.textContent = texts[lang].uploadSelected; status.className = 'uploadStatus success'; }
@@ -1042,6 +1092,7 @@ if (mealInput) {
       preview.src = URL.createObjectURL(file);
       preview.style.display = 'inline-block';
     }
+    if (infoContainer) infoContainer.style.display = 'block';
   });
 }
 
