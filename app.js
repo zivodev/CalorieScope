@@ -4,12 +4,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const progressContainer = document.getElementById("progressContainer");
   const progressText = document.getElementById("progressText");
   const progressCircle = document.getElementById("calorieProgress");
-  const proteinText = document.getElementById("proteinText");
-  const carbsText = document.getElementById("carbsText");
-  const fatText = document.getElementById("fatText");
-  const proteinBar = document.getElementById("proteinBar");
-  const carbsBar = document.getElementById("carbsBar");
-  const fatBar = document.getElementById("fatBar");
   const manualCalories = document.getElementById("manualCalories");
   const addCaloriesBtn = document.getElementById("addCaloriesBtn");
   const forgetGoalBtn = document.getElementById("forgetGoalBtn");
@@ -19,7 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const uploadStatus = document.getElementById("uploadStatus");
   const imagePreview = document.getElementById("imagePreview");
   const themeSelector = document.getElementById("themeSelector");
-  const themeToggle = document.getElementById("themeToggle");
   const themeCircles = document.querySelectorAll(".theme-circle");
   const panel = document.getElementById("userPanel");
   const panelToggle = document.getElementById("panelToggle");
@@ -31,6 +24,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const loadingBar = document.getElementById("loadingBar");
   const tabButtons = document.querySelectorAll(".tabBtn");
   const pages = document.querySelectorAll(".page");
+  const macroMiniValue = {
+    protein: document.getElementById("proteinMiniValue"),
+    carbs: document.getElementById("carbsMiniValue"),
+    fat: document.getElementById("fatMiniValue")
+  };
+  const macroMiniCircle = {
+    protein: document.getElementById("proteinCircle"),
+    carbs: document.getElementById("carbsCircle"),
+    fat: document.getElementById("fatCircle")
+  };
 
   const translations = {
     en: {
@@ -62,9 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
       },
       goal: {
         placeholder: "Fill in your details to generate a tailored calorie plan.",
-        incomplete: "Please complete every field to continue.",
-        result: ({ calories }) =>
-          `Your daily target is ${calories} kcal. Stay consistent and listen to your body.`
+        incomplete: "Please complete every field to continue."
       },
       progress: {
         label: "Calorie goal",
@@ -90,7 +91,9 @@ document.addEventListener("DOMContentLoaded", () => {
         languageCurrent: "English",
         languageAria: "Toggle app language",
         theme: "Themes",
-        note: "Changes are saved locally so you can pick up where you left off."
+        note: "Changes are saved locally so you can pick up where you left off.",
+        reset: "Reset data",
+        resetDone: "Data reset!"
       },
       macro: {
         protein: "Protein",
@@ -136,8 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
       },
       goal: {
         placeholder: "أدخل بياناتك لتحصل على خطة سعرات مخصصة.",
-        incomplete: "رجاءً أكمل جميع الحقول للمتابعة.",
-        result: ({ calories }) => `هدفك اليومي هو ${calories} سعرة. التزم واستمع لجسمك.`
+        incomplete: "رجاءً أكمل جميع الحقول للمتابعة."
       },
       progress: {
         label: "هدف السعرات",
@@ -163,7 +165,9 @@ document.addEventListener("DOMContentLoaded", () => {
         languageCurrent: "العربية",
         languageAria: "تبديل لغة التطبيق",
         theme: "السِمات",
-        note: "نحفظ تغييراتك محلياً لتكمل لاحقاً."
+        note: "نحفظ تغييراتك محلياً لتكمل لاحقاً.",
+        reset: "إعادة ضبط البيانات",
+        resetDone: "تمت إعادة الضبط!"
       },
       macro: {
         protein: "البروتين",
@@ -205,6 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const circleCircumference = 439.82;
+  const microCircumference = 2 * Math.PI * 26;
   let calorieGoal = 0;
   let currentCalories = 0;
   let macroTargets = { protein: 0, carbs: 0, fat: 0 };
@@ -213,6 +218,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let goalMessageArgs = {};
   let uploadState = "idle";
   let uploadFileName = "";
+  let resetFeedbackTimer = null;
+  let resetConfirmed = false;
 
   const formatNumber = (value) =>
     Number(value ?? 0).toLocaleString(currentLang === "ar" ? "ar-EG" : "en-US");
@@ -254,9 +261,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const renderGoalMessage = () => {
     if (goalState === "result") {
-      goalDisplay.textContent = translate("goal.result", {
-        calories: formatNumber(goalMessageArgs.calories)
-      });
+      const calories = goalMessageArgs.calories ?? 0;
+      goalDisplay.textContent = `${formatNumber(calories)} ${translate("units.kcal")}`;
     } else if (goalState === "incomplete") {
       goalDisplay.textContent = translate("goal.incomplete");
     } else {
@@ -298,32 +304,28 @@ document.addEventListener("DOMContentLoaded", () => {
       : 0;
 
     const gramUnit = translate("units.grams");
+    const macroData = [
+      ["protein", consumedProtein],
+      ["carbs", consumedCarbs],
+      ["fat", consumedFat]
+    ];
 
-    proteinText.textContent = `${translate("macro.protein")}: ${formatNumber(
-      consumedProtein
-    )}${gramUnit} / ${formatNumber(macroTargets.protein)}${gramUnit}`;
-    carbsText.textContent = `${translate("macro.carbs")}: ${formatNumber(
-      consumedCarbs
-    )}${gramUnit} / ${formatNumber(macroTargets.carbs)}${gramUnit}`;
-    fatText.textContent = `${translate("macro.fat")}: ${formatNumber(
-      consumedFat
-    )}${gramUnit} / ${formatNumber(macroTargets.fat)}${gramUnit}`;
-
-    proteinBar.style.width = `${clamp(
-      (consumedProtein / (macroTargets.protein || 1)) * 100 || 0,
-      0,
-      120
-    )}%`;
-    carbsBar.style.width = `${clamp(
-      (consumedCarbs / (macroTargets.carbs || 1)) * 100 || 0,
-      0,
-      120
-    )}%`;
-    fatBar.style.width = `${clamp(
-      (consumedFat / (macroTargets.fat || 1)) * 100 || 0,
-      0,
-      120
-    )}%`;
+    macroData.forEach(([key, consumed]) => {
+      const target = macroTargets[key] || 0;
+      const ratio = target ? clamp(consumed / target, 0, 1.2) : 0;
+      const circle = macroMiniCircle[key];
+      const valueEl = macroMiniValue[key];
+      if (circle) {
+        circle.style.strokeDashoffset = microCircumference - ratio * microCircumference;
+      }
+      if (valueEl) {
+        valueEl.textContent = `${formatNumber(consumed)}${gramUnit}`;
+        valueEl.setAttribute(
+          "title",
+          target ? `${formatNumber(consumed)} / ${formatNumber(target)}${gramUnit}` : ""
+        );
+      }
+    });
   };
 
   const resetProgress = () => {
@@ -368,6 +370,8 @@ document.addEventListener("DOMContentLoaded", () => {
         progressContainer.style.display = "flex";
         resetProgress();
         renderGoalMessage();
+        panel.classList.add("collapsed");
+        panelToggle.setAttribute("aria-expanded", "false");
         toggleLoading(false);
       }, 650);
     });
@@ -382,6 +386,16 @@ document.addEventListener("DOMContentLoaded", () => {
     manualCalories.value = "";
   };
 
+  const setResetFeedback = (state) => {
+    resetConfirmed = state;
+    if (forgetGoalBtn) {
+      forgetGoalBtn.classList.toggle("confirmed", state);
+      forgetGoalBtn.textContent = translate(
+        state ? "settings.resetDone" : "settings.reset"
+      );
+    }
+  };
+
   const resetAll = () => {
     form.reset();
     goalState = "placeholder";
@@ -392,13 +406,19 @@ document.addEventListener("DOMContentLoaded", () => {
     macroTargets = { protein: 0, carbs: 0, fat: 0 };
     setTheme("default");
     imagePreview.src = "";
+    imagePreview.classList.remove("has-image");
     imageInput.value = "";
     uploadFileName = "";
     uploadState = "idle";
+    panel.classList.remove("collapsed");
+    panelToggle.setAttribute("aria-expanded", "true");
     renderGoalMessage();
     renderUploadStatus();
     updateCircleProgress();
     updateMacroUI();
+    if (resetFeedbackTimer) clearTimeout(resetFeedbackTimer);
+    setResetFeedback(true);
+    resetFeedbackTimer = setTimeout(() => setResetFeedback(false), 2200);
   };
 
   const togglePanel = () => {
@@ -412,16 +432,11 @@ document.addEventListener("DOMContentLoaded", () => {
     setTheme(selectedTheme);
   };
 
-  const handleThemeToggle = () => {
-    themeSelector.classList.toggle("collapsed");
-    const expanded = !themeSelector.classList.contains("collapsed");
-    themeToggle.setAttribute("aria-expanded", String(expanded));
-  };
-
   const handleUploadPreview = () => {
     const file = imageInput.files?.[0];
     if (!file) {
       imagePreview.src = "";
+      imagePreview.classList.remove("has-image");
       uploadFileName = "";
       uploadState = "idle";
       renderUploadStatus();
@@ -429,7 +444,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     const reader = new FileReader();
     reader.onload = (e) => {
-      imagePreview.src = e.target?.result || "";
+      const result = e.target?.result || "";
+      imagePreview.src = result;
+      imagePreview.classList.toggle("has-image", Boolean(result));
       uploadFileName = file.name;
       uploadState = "ready";
       renderUploadStatus();
@@ -455,7 +472,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const applyTranslations = () => {
     document.querySelectorAll("[data-i18n]").forEach((el) => {
-      if (el.id === "goalDisplay" || el.id === "uploadStatus") return;
+      if (["goalDisplay", "uploadStatus", "forgetGoalBtn"].includes(el.id)) return;
       const text = translate(el.dataset.i18n);
       if (text) el.textContent = text;
     });
@@ -469,6 +486,11 @@ document.addEventListener("DOMContentLoaded", () => {
     renderUploadStatus();
     updateCircleProgress();
     updateMacroUI();
+    if (forgetGoalBtn) {
+      forgetGoalBtn.textContent = translate(
+        resetConfirmed ? "settings.resetDone" : "settings.reset"
+      );
+    }
   };
 
   const setLanguage = (lang) => {
@@ -505,7 +527,6 @@ document.addEventListener("DOMContentLoaded", () => {
   addCaloriesBtn.addEventListener("click", handleManualAdd);
   forgetGoalBtn.addEventListener("click", resetAll);
   panelToggle.addEventListener("click", togglePanel);
-  themeToggle.addEventListener("click", handleThemeToggle);
   themeCircles.forEach((circle) =>
     circle.addEventListener("click", handleThemeCircleClick)
   );
