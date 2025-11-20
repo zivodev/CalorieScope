@@ -19,8 +19,8 @@
       <span class="brand-title">CalorieScope</span>
     </div>
 
-    <div class="layout">
-      <section class="panelColumn" id="goalColumn">
+    <div class="pages">
+      <section class="page panelColumn active" id="page-goal" data-page="goal">
         <div id="userPanel" class="panel">
           <button id="panelToggle" class="panelHeader" aria-expanded="true">
             <span id="panelTitle" data-i18n="panel.title">Body Details</span>
@@ -96,7 +96,7 @@
         </div>
       </section>
 
-      <section class="panelColumn" id="mediaColumn">
+      <section class="page panelColumn" id="page-media" data-page="media">
         <div class="panel mediaPanel">
           <h2 data-i18n="media.title">Meal capture</h2>
           <p class="mediaLead" data-i18n="media.lead">Log a photo when you add calories</p>
@@ -125,17 +125,17 @@
         </div>
       </section>
 
-      <section class="panelColumn" id="settingsColumn">
+      <section class="page panelColumn" id="page-settings" data-page="settings">
         <div class="panel settingsPanel">
           <h2 data-i18n="settings.title">Personalize</h2>
 
           <div class="settingRow">
             <div class="settingLabel" data-i18n="settings.language">Language</div>
-            <label class="switch" aria-label="Toggle language">
-              <input type="checkbox" id="langToggle" />
-              <span class="switchTrack"><span class="switchThumb"></span></span>
-              <span id="langToggleLabel" class="switchText" data-i18n="settings.languageCurrent">Arabic</span>
-            </label>
+            <div class="langSegment" role="group" aria-label="Language switch" data-active="en">
+              <button type="button" class="segOption active" data-lang="en">English</button>
+              <button type="button" class="segOption" data-lang="ar">العربية</button>
+              <span class="segHighlight" aria-hidden="true"></span>
+            </div>
           </div>
 
           <div class="settingRow themeRow">
@@ -152,12 +152,12 @@
               </button>
 
               <div class="theme-list">
-                <button class="theme-circle" data-theme="default" title="Default"></button>
-                <button class="theme-circle" data-theme="sunset" title="Sunset"></button>
-                <button class="theme-circle" data-theme="ocean" title="Ocean"></button>
-                <button class="theme-circle" data-theme="forest" title="Forest"></button>
-                <button class="theme-circle" data-theme="neon" title="Neon"></button>
-                <button class="theme-circle" data-theme="lavender" title="Lavender"></button>
+                <button class="theme-circle" data-theme="default" title="Bronze Night"></button>
+                <button class="theme-circle" data-theme="ember" title="Ember Glow"></button>
+                <button class="theme-circle" data-theme="midnight" title="Midnight"></button>
+                <button class="theme-circle" data-theme="dawn" title="Soft Dawn"></button>
+                <button class="theme-circle" data-theme="ocean" title="Calm Ocean"></button>
+                <button class="theme-circle" data-theme="meadow" title="Fresh Meadow"></button>
               </div>
             </div>
           </div>
@@ -168,6 +168,35 @@
         </div>
       </section>
     </div>
+
+    <nav class="tabBar" aria-label="Main navigation">
+      <button class="tabBtn active" data-target="goal">
+        <span class="tabIcon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+            <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" />
+            <circle cx="12" cy="12" r="4" fill="currentColor" />
+          </svg>
+        </span>
+        <span class="tabLabel" data-i18n="nav.goal">Progress</span>
+      </button>
+      <button class="tabBtn" data-target="media">
+        <span class="tabIcon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </span>
+        <span class="tabLabel" data-i18n="nav.capture">Capture</span>
+      </button>
+      <button class="tabBtn" data-target="settings">
+        <span class="tabIcon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+            <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="2" />
+            <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.7 2 2 0 0 1-4 0 1 1 0 0 0-.6-.7 1 1 0 0 0-1.1.2l-.1.1a2 2 0 0 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.7-.6 2 2 0 0 1 0-4 1 1 0 0 0 .7-.6 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 0 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.7 2 2 0 0 1 4 0 1 1 0 0 0 .6.7 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 0 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .7.6 2 2 0 0 1 0 4 1 1 0 0 0-.7.6Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </span>
+        <span class="tabLabel" data-i18n="nav.settings">Settings</span>
+      </button>
+    </nav>
   </div>
 
   <button id="forgetGoalBtn" type="button" aria-label="Change information" title="Change information">⟲</button>

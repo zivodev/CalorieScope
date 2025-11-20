@@ -23,11 +23,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const themeCircles = document.querySelectorAll(".theme-circle");
   const panel = document.getElementById("userPanel");
   const panelToggle = document.getElementById("panelToggle");
-  const langToggle = document.getElementById("langToggle");
-  const langToggleLabel = document.getElementById("langToggleLabel");
+  const langSegment = document.querySelector(".langSegment");
+  const langButtons = langSegment?.querySelectorAll(".segOption") ?? [];
+  const segHighlight = document.querySelector(".segHighlight");
   const container = document.querySelector(".container");
   const loadingOverlay = document.getElementById("loadingOverlay");
   const loadingBar = document.getElementById("loadingBar");
+  const tabButtons = document.querySelectorAll(".tabBtn");
+  const pages = document.querySelectorAll(".page");
 
   const translations = {
     en: {
@@ -93,6 +96,11 @@ document.addEventListener("DOMContentLoaded", () => {
         protein: "Protein",
         carbs: "Carbs",
         fat: "Fats"
+      },
+      nav: {
+        goal: "Progress",
+        capture: "Capture",
+        settings: "Settings"
       },
       units: {
         grams: "g",
@@ -161,6 +169,11 @@ document.addEventListener("DOMContentLoaded", () => {
         protein: "البروتين",
         carbs: "الكربوهيدرات",
         fat: "الدهون"
+      },
+      nav: {
+        goal: "التقدم",
+        capture: "التسجيل",
+        settings: "الإعدادات"
       },
       units: {
         grams: "غ",
@@ -452,12 +465,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (placeholder) el.placeholder = placeholder;
     });
 
-    langToggleLabel.textContent = translate("settings.languageCurrent");
-    const langSwitch = langToggle.closest(".switch");
-    if (langSwitch) {
-      langSwitch.setAttribute("aria-label", translate("settings.languageAria"));
-    }
-
     renderGoalMessage();
     renderUploadStatus();
     updateCircleProgress();
@@ -469,8 +476,29 @@ document.addEventListener("DOMContentLoaded", () => {
     document.documentElement.lang = lang;
     document.body.dir = lang === "ar" ? "rtl" : "ltr";
     container.dir = lang === "ar" ? "rtl" : "ltr";
-    langToggle.checked = lang === "ar";
+    if (langSegment) {
+      langSegment.dataset.active = lang;
+      langButtons.forEach((btn) =>
+        btn.classList.toggle("active", btn.dataset.lang === lang)
+      );
+      if (segHighlight) {
+        const index = lang === "ar" ? 1 : 0;
+        segHighlight.style.transform = `translateX(${index * 100}%)`;
+      }
+    }
+    container.classList.remove("language-fade");
+    void container.offsetWidth;
+    container.classList.add("language-fade");
     applyTranslations();
+  };
+
+  const setActivePage = (target) => {
+    pages.forEach((page) =>
+      page.classList.toggle("active", page.dataset.page === target)
+    );
+    tabButtons.forEach((btn) =>
+      btn.classList.toggle("active", btn.dataset.target === target)
+    );
   };
 
   form.addEventListener("submit", handleFormSubmit);
@@ -481,14 +509,18 @@ document.addEventListener("DOMContentLoaded", () => {
   themeCircles.forEach((circle) =>
     circle.addEventListener("click", handleThemeCircleClick)
   );
-  langToggle.addEventListener("change", (event) =>
-    setLanguage(event.target.checked ? "ar" : "en")
+  langButtons.forEach((btn) =>
+    btn.addEventListener("click", () => setLanguage(btn.dataset.lang))
   );
   uploadBtn.addEventListener("click", () => imageInput.click());
   imageInput.addEventListener("change", handleUploadPreview);
   sendImageBtn.addEventListener("click", fakeUpload);
+  tabButtons.forEach((btn) =>
+    btn.addEventListener("click", () => setActivePage(btn.dataset.target))
+  );
 
   setTheme("default");
+  setActivePage("goal");
   setLanguage("en");
   progressContainer.style.display = "none";
   renderGoalMessage();
