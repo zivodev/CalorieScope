@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("userForm");
-  const goalDisplay = document.getElementById("goalDisplay");
   const progressContainer = document.getElementById("progressContainer");
   const progressText = document.getElementById("progressText");
   const progressCircle = document.getElementById("calorieProgress");
@@ -214,8 +213,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentCalories = 0;
   let macroTargets = { protein: 0, carbs: 0, fat: 0 };
   let currentLang = "en";
-  let goalState = "placeholder";
-  let goalMessageArgs = {};
   let uploadState = "idle";
   let uploadFileName = "";
   let resetFeedbackTimer = null;
@@ -257,17 +254,6 @@ document.addEventListener("DOMContentLoaded", () => {
     themeCircles.forEach((circle) =>
       circle.classList.toggle("active", circle.dataset.theme === theme)
     );
-  };
-
-  const renderGoalMessage = () => {
-    if (goalState === "result") {
-      const calories = goalMessageArgs.calories ?? 0;
-      goalDisplay.textContent = `${formatNumber(calories)} ${translate("units.kcal")}`;
-    } else if (goalState === "incomplete") {
-      goalDisplay.textContent = translate("goal.incomplete");
-    } else {
-      goalDisplay.textContent = translate("goal.placeholder");
-    }
   };
 
   const renderUploadStatus = () => {
@@ -350,8 +336,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const formData = new FormData(form);
     const entries = Object.fromEntries(formData);
     if (Object.values(entries).some((value) => !value)) {
-      goalState = "incomplete";
-      renderGoalMessage();
+      form.reportValidity();
       return;
     }
 
@@ -365,13 +350,8 @@ document.addEventListener("DOMContentLoaded", () => {
           fat: Math.round((calorieGoal * macroRatios.fat) / 9)
         };
 
-        goalState = "result";
-        goalMessageArgs = { calories: calorieGoal };
         progressContainer.style.display = "flex";
         resetProgress();
-        renderGoalMessage();
-        panel.classList.add("collapsed");
-        panelToggle.setAttribute("aria-expanded", "false");
         toggleLoading(false);
       }, 650);
     });
@@ -398,8 +378,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const resetAll = () => {
     form.reset();
-    goalState = "placeholder";
-    goalMessageArgs = {};
     progressContainer.style.display = "none";
     calorieGoal = 0;
     currentCalories = 0;
@@ -410,9 +388,6 @@ document.addEventListener("DOMContentLoaded", () => {
     imageInput.value = "";
     uploadFileName = "";
     uploadState = "idle";
-    panel.classList.remove("collapsed");
-    panelToggle.setAttribute("aria-expanded", "true");
-    renderGoalMessage();
     renderUploadStatus();
     updateCircleProgress();
     updateMacroUI();
@@ -472,7 +447,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const applyTranslations = () => {
     document.querySelectorAll("[data-i18n]").forEach((el) => {
-      if (["goalDisplay", "uploadStatus", "forgetGoalBtn"].includes(el.id)) return;
+      if (["uploadStatus", "forgetGoalBtn"].includes(el.id)) return;
       const text = translate(el.dataset.i18n);
       if (text) el.textContent = text;
     });
@@ -482,7 +457,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (placeholder) el.placeholder = placeholder;
     });
 
-    renderGoalMessage();
     renderUploadStatus();
     updateCircleProgress();
     updateMacroUI();
@@ -544,6 +518,5 @@ document.addEventListener("DOMContentLoaded", () => {
   setActivePage("goal");
   setLanguage("en");
   progressContainer.style.display = "none";
-  renderGoalMessage();
   renderUploadStatus();
 });
